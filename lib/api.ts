@@ -4,18 +4,8 @@
  */
 import axios, { AxiosInstance } from 'axios';
 
-export interface StatusResponse {
-  status: string;
-  message: string;
-}
-
 export interface DocumentResponse {
-  filename: string;
   content: string;
-}
-
-export interface DocumentListResponse {
-  documents: string[];
 }
 
 export interface ChatRequest {
@@ -23,23 +13,13 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
-  response: string;
-  tokens_in: number;
-  tokens_out: number;
-  cost_usd: number;
+  message: string;
 }
 
 export interface FeedbackRequest {
-  origin: 'landing_page' | 'footer' | 'application' | 'chat';
-  rating?: number;
-  feedback_text?: string;
-  chat_prompt?: string;
-}
-
-export interface FeedbackResponse {
-  success: boolean;
-  message: string;
-  feedback_id?: number;
+  convo?: string | null;
+  stars?: number | null;
+  message?: string | null;
 }
 
 class ApiService {
@@ -86,18 +66,18 @@ class ApiService {
     }
   }
 
-  async getStatus(): Promise<StatusResponse> {
-    const { data } = await this.client.get<StatusResponse>('/status');
+  async listDocuments(): Promise<string[]> {
+    const { data } = await this.client.get<Array<{ name: string }>>('/documents');
+    return data.map((d: { name: string }) => d.name);
+  }
+
+  async getDocument(name: string): Promise<DocumentResponse> {
+    const { data } = await this.client.get<DocumentResponse>(`/documents/${name}`);
     return data;
   }
 
-  async listDocuments(): Promise<string[]> {
-    const { data } = await this.client.get<DocumentListResponse>('/documents');
-    return data.documents;
-  }
-
-  async getDocument(filename: string): Promise<DocumentResponse> {
-    const { data } = await this.client.get<DocumentResponse>(`/documents/${filename}`);
+  async getDocumentTOC(name: string): Promise<Array<{ position: number; name: string; level: number }>> {
+    const { data } = await this.client.get(`/documents/toc/${name}`);
     return data;
   }
 
@@ -107,9 +87,8 @@ class ApiService {
     return data;
   }
 
-  async submitFeedback(feedbackData: FeedbackRequest): Promise<FeedbackResponse> {
-    const { data } = await this.client.post<FeedbackResponse>('/feedback', feedbackData);
-    return data;
+  async submitFeedback(feedbackData: FeedbackRequest): Promise<void> {
+    await this.client.post('/feedback', feedbackData);
   }
 }
 

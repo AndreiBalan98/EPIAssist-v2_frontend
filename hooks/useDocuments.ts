@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { TocItem } from '@/lib/types';
 
 interface UseDocumentsReturn {
   documents: string[];
-  currentDocument: { filename: string; content: string } | null;
+  currentDocument: { name: string; content: string } | null;
+  toc: TocItem[];
   loading: boolean;
   error: string | null;
-  selectDocument: (filename: string) => Promise<void>;
+  selectDocument: (name: string) => Promise<void>;
 }
 
 export const useDocuments = (): UseDocumentsReturn => {
   const [documents, setDocuments] = useState<string[]>([]);
-  const [currentDocument, setCurrentDocument] = useState<{ filename: string; content: string } | null>(null);
+  const [currentDocument, setCurrentDocument] = useState<{ name: string; content: string } | null>(null);
+  const [toc, setToc] = useState<TocItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,15 +41,20 @@ export const useDocuments = (): UseDocumentsReturn => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectDocument = async (filename: string) => {
+  const selectDocument = async (name: string) => {
     setLoading(true);
     setError(null);
+    setToc([]);
 
     try {
-      const doc = await api.getDocument(filename);
-      setCurrentDocument(doc);
+      const [doc, tocData] = await Promise.all([
+        api.getDocument(name),
+        api.getDocumentTOC(name),
+      ]);
+      setCurrentDocument({ name, content: doc.content });
+      setToc(tocData);
     } catch (err) {
-      setError(`Failed to load document: ${filename}`);
+      setError(`Failed to load document: ${name}`);
       console.error('Error loading document:', err);
     } finally {
       setLoading(false);
@@ -56,6 +64,7 @@ export const useDocuments = (): UseDocumentsReturn => {
   return {
     documents,
     currentDocument,
+    toc,
     loading,
     error,
     selectDocument,

@@ -1,18 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import axios from 'axios';
-import { trackAIPromptSent, trackFeedbackSubmitted, trackSourceClick, trackAICost } from '@/lib/posthog';
-
-const sanitizeHTML = (html: string): string => {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '');
-};
 
 interface Message {
   role: 'user' | 'assistant';
@@ -52,13 +44,11 @@ const StarRating = ({ onRate, currentRating, userPrompt }: StarRatingProps) => {
     if (selectedRating) {
       try {
         await api.submitFeedback({
-          origin: 'chat',
-          rating: selectedRating,
-          feedback_text: reviewText.trim() || undefined,
-          chat_prompt: userPrompt,
+          stars: selectedRating,
+          message: reviewText.trim() || null,
+          convo: userPrompt || null,
         });
 
-        trackFeedbackSubmitted('chat', selectedRating, !!reviewText.trim());
         onRate(selectedRating, reviewText.trim() || undefined);
         setShowThanks(true);
         setTimeout(() => setShowThanks(false), 3000);
@@ -140,11 +130,7 @@ const StarRating = ({ onRate, currentRating, userPrompt }: StarRatingProps) => {
   );
 };
 
-interface ChatInputProps {
-  onNavigateToSource?: (documentName: string, sectionName: string | null) => void | Promise<void>;
-}
-
-export const ChatInput = ({ onNavigateToSource }: ChatInputProps) => {
+export const ChatInput = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
@@ -223,8 +209,6 @@ export const ChatInput = ({ onNavigateToSource }: ChatInputProps) => {
     clearCloseTimer();
     setShowWelcome(false);
 
-    trackAIPromptSent(userMessage.length);
-
     const newConversation: Message[] = [
       ...conversation,
       { role: 'user', content: userMessage },
@@ -235,12 +219,9 @@ export const ChatInput = ({ onNavigateToSource }: ChatInputProps) => {
     try {
       const result = await api.sendChatMessage(userMessage);
 
-      const totalTokens = result.tokens_in + result.tokens_out;
-      trackAICost(totalTokens, result.tokens_in, result.tokens_out, result.cost_usd);
-
       setConversation([
         ...newConversation,
-        { role: 'assistant', content: result.response },
+        { role: 'assistant', content: result.message },
       ]);
     } catch (err) {
       console.error('Chat error:', err);
@@ -287,86 +268,6 @@ export const ChatInput = ({ onNavigateToSource }: ChatInputProps) => {
     ? conversation[lastAssistantIndex - 1]?.content
     : undefined;
 
-  const renderContentWithSources = useMemo(() => {
-    return (content: string) => {
-      const isHTML = /<[^>]+>/.test(content);
-
-      if (!isHTML) {
-        return <ReactMarkdown>{content}</ReactMarkdown>;
-      }
-
-      const sanitized = sanitizeHTML(content);
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(sanitized, 'text/html');
-
-      const sourcesDiv = doc.querySelector('.sources');
-      let sourcesElement: React.JSX.Element | null = null;
-
-      if (sourcesDiv) {
-        const sourceParagraphs = sourcesDiv.querySelectorAll('p');
-        const sources: Array<{
-          documentName: string;
-          sectionName: string | null;
-          fullPath: string;
-        }> = [];
-
-        sourceParagraphs.forEach((p) => {
-          const text = p.textContent || '';
-          const match = text.match(/^Sursa:\s*(.+)$/);
-          if (match) {
-            const fullPath = match[1].trim();
-            const pathParts = fullPath.split('/');
-            const documentName = pathParts[0].trim();
-            const sectionName = pathParts.length > 1 ? pathParts[pathParts.length - 1].trim() : null;
-            sources.push({ documentName, sectionName, fullPath });
-          }
-        });
-
-        if (sources.length > 0) {
-          sourcesElement = (
-            <div className="mt-4 pt-3 border-t border-primary/20">
-              <p className="font-medium text-gray-700 mb-2">Surse:</p>
-              <div className="flex flex-wrap gap-2">
-                {sources.map((source, idx) => (
-                  <button
-                    key={`source-${idx}`}
-                    onClick={async () => {
-                      trackSourceClick(source.documentName, source.sectionName, source.fullPath);
-                      if (onNavigateToSource) {
-                        await onNavigateToSource(source.documentName, source.sectionName);
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-secondary hover:text-white hover:bg-secondary font-medium rounded transition-colors border border-secondary text-sm"
-                    title={`Navighează la ${source.fullPath}`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    <span>{source.fullPath}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        sourcesDiv.remove();
-      }
-
-      const contentHTML = doc.body.innerHTML;
-
-      return (
-        <div className="space-y-2">
-          <div
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: contentHTML }}
-          />
-          {sourcesElement}
-        </div>
-      );
-    };
-  }, [onNavigateToSource]);
-
   const showResponseArea = isOpen && (loading || lastAssistantMessage || error || (showWelcome && hasInteracted));
 
   const welcomeContent =
@@ -412,7 +313,7 @@ Sunt aici să te ajut să navighezi prin documentele legislative medicale. Iată
           ) : lastAssistantMessage ? (
             <div>
               <div className="prose prose-sm max-w-none prose-headings:text-dark-light prose-strong:text-secondary prose-a:text-secondary">
-                {renderContentWithSources(lastAssistantMessage.content)}
+                <ReactMarkdown>{lastAssistantMessage.content}</ReactMarkdown>
               </div>
               <StarRating
                 onRate={handleRating}

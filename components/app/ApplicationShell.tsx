@@ -11,33 +11,27 @@ import { ChatInput } from '@/components/app/ChatInput';
 import { FeedbackButton } from '@/components/app/FeedbackButton';
 import { useDocuments } from '@/hooks/useDocuments';
 
-interface HeadingItem {
-  id: string;
-  text: string;
-  level: number;
-}
-
 export const ApplicationShell = () => {
-  const { documents, currentDocument, loading, error, selectDocument } = useDocuments();
-  const [headings, setHeadings] = useState<HeadingItem[]>([]);
+  const { documents, currentDocument, toc, loading, error, selectDocument } = useDocuments();
   const [scrollToHeading, setScrollToHeading] = useState<string | null>(null);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
 
-  const handleHeadingsExtracted = useCallback((extractedHeadings: HeadingItem[]) => {
-    setHeadings(extractedHeadings);
-  }, []);
+  const tocHeadings = toc.map(item => ({
+    id: `heading-${item.position}`,
+    text: item.name,
+    level: item.level,
+  }));
 
   const handleHeadingClick = useCallback((headingId: string) => {
     setScrollToHeading(headingId);
     setTimeout(() => setScrollToHeading(null), 1000);
   }, []);
 
-  const handleDocumentSelect = useCallback(async (filename: string) => {
-    setHeadings([]);
+  const handleDocumentSelect = useCallback(async (name: string) => {
     setScrollToHeading(null);
-    await selectDocument(filename);
+    await selectDocument(name);
   }, [selectDocument]);
 
   if (error && !currentDocument) {
@@ -74,7 +68,7 @@ export const ApplicationShell = () => {
       <Header
         onMenuClick={() => setIsMenuOpen(true)}
         onTocClick={() => setIsTocOpen(true)}
-        showTocButton={headings.length > 0}
+        showTocButton={tocHeadings.length > 0}
       />
 
       <MobileDrawer
@@ -85,7 +79,7 @@ export const ApplicationShell = () => {
       >
         <DocumentSelector
           documents={documents}
-          selectedDocument={currentDocument?.filename || null}
+          selectedDocument={currentDocument?.name || null}
           onSelect={handleDocumentSelect}
           isMobileMode={true}
           onMobileSelect={() => setIsMenuOpen(false)}
@@ -99,7 +93,7 @@ export const ApplicationShell = () => {
         title="Cuprins"
       >
         <FloatingTOC
-          headings={headings}
+          headings={tocHeadings}
           onHeadingClick={handleHeadingClick}
           isMobileMode={true}
           onMobileSelect={() => setIsTocOpen(false)}
@@ -108,13 +102,13 @@ export const ApplicationShell = () => {
 
       <DocumentSelector
         documents={documents}
-        selectedDocument={currentDocument?.filename || null}
+        selectedDocument={currentDocument?.name || null}
         onSelect={handleDocumentSelect}
       />
 
       {currentDocument && (
         <FloatingTOC
-          headings={headings}
+          headings={tocHeadings}
           onHeadingClick={handleHeadingClick}
         />
       )}
@@ -124,8 +118,7 @@ export const ApplicationShell = () => {
       ) : currentDocument ? (
         <DocumentViewer
           content={currentDocument.content}
-          filename={currentDocument.filename}
-          onHeadingsExtracted={handleHeadingsExtracted}
+          name={currentDocument.name}
           scrollToHeading={scrollToHeading}
         />
       ) : (
@@ -134,32 +127,7 @@ export const ApplicationShell = () => {
         </div>
       )}
 
-      <ChatInput
-        onNavigateToSource={async (documentName: string, sectionName: string | null) => {
-          const filename = `${documentName}.md`;
-          const isCurrentDocument = currentDocument?.filename === filename;
-
-          if (!isCurrentDocument) {
-            await handleDocumentSelect(filename);
-            await new Promise(resolve => setTimeout(resolve, 300));
-          }
-
-          if (sectionName) {
-            const sectionId = sectionName
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .replace(/\s+/g, '-')
-              .substring(0, 50);
-
-            await new Promise(resolve => setTimeout(resolve, 100));
-            setScrollToHeading(sectionId);
-
-            setTimeout(() => {
-              setScrollToHeading(null);
-            }, 1000);
-          }
-        }}
-      />
+      <ChatInput />
 
       <FeedbackButton />
     </div>

@@ -3,22 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { trackHeaderNavClick, trackCTAClick, trackAppOpened, trackFeedbackSubmitted } from '@/lib/posthog';
-
 export const LandingPage = () => {
   const router = useRouter();
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [feedbackOrigin, setFeedbackOrigin] = useState<'landing_page' | 'footer'>('landing_page');
-
   const handleEnterApp = () => {
-    trackAppOpened();
     router.push('/application');
   };
 
   const scrollToSection = (sectionId: string) => {
-    trackHeaderNavClick(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -32,10 +26,8 @@ export const LandingPage = () => {
 
     try {
       await api.submitFeedback({
-        origin: feedbackOrigin,
-        feedback_text: feedbackText.trim(),
+        message: feedbackText.trim(),
       });
-      trackFeedbackSubmitted(feedbackOrigin, undefined, !!feedbackText.trim());
       setFeedbackSubmitted(true);
       setTimeout(() => {
         setFeedbackSubmitted(false);
@@ -50,6 +42,7 @@ export const LandingPage = () => {
       }, 3000);
     }
   };
+
     
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -84,7 +77,7 @@ export const LandingPage = () => {
             <button onClick={() => scrollToSection('footer')} className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Contact</button>
             <button onClick={() => scrollToSection('feedback')} className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Feedback</button>
             <button
-              onClick={() => { trackCTAClick('header'); handleEnterApp(); }}
+              onClick={handleEnterApp}
               className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark active:bg-[#5E2916] transition-colors shadow-sm"
             >
               Deschide legislația
@@ -124,7 +117,7 @@ export const LandingPage = () => {
                 <button onClick={() => scrollToSection('footer')} className="block w-full text-left text-base font-medium text-gray-600 hover:text-primary py-2">Contact</button>
                 <button onClick={() => scrollToSection('feedback')} className="block w-full text-left text-base font-medium text-gray-600 hover:text-primary py-2">Feedback</button>
                 <button
-                  onClick={() => { trackCTAClick('mobile_menu'); setIsMobileMenuOpen(false); handleEnterApp(); }}
+                  onClick={() => { setIsMobileMenuOpen(false); handleEnterApp(); }}
                   className="block w-full px-5 py-3 bg-primary text-white text-base font-medium rounded-lg hover:bg-primary-dark active:bg-[#5E2916] transition-colors shadow-sm mt-4"
                 >
                   Deschide legislația
@@ -152,7 +145,7 @@ export const LandingPage = () => {
                 Accesează cu ușurință ordinele de care ai nevoie: <strong>Ordin Nr. 1101/2016</strong>, <strong>Nr. 1761/2021</strong>, <strong>Nr. 428/2020</strong>, <strong>Nr. 914/2006</strong> și altele. Toate într-un singur loc, formatate uniform, cu anexă pentru navigare rapidă și asistență AI.
               </p>
               <button
-                onClick={() => { trackCTAClick('hero'); handleEnterApp(); }}
+                onClick={handleEnterApp}
                 className="px-8 py-3 sm:px-10 sm:py-4 bg-primary text-white text-base sm:text-lg font-semibold rounded-xl hover:bg-primary-dark active:bg-[#5E2916] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Deschide legislația &rarr;
@@ -166,7 +159,7 @@ export const LandingPage = () => {
               <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                 Acesta este un proiect încă în dezvoltare. Dacă vă place și considerați că vă este de folos, vă rugăm să ne spuneți părerea dumneavoastră. <strong>Ce vă place? Ce nu vă place? Ce poate fi îmbunătățit?</strong> Ne-ar fi de mare ajutor pentru a putea livra un produs de calitate. Vă mulțumim!
               </p>
-              <form onSubmit={(e) => { setFeedbackOrigin('landing_page'); handleFeedbackSubmit(e); }} className="space-y-3 sm:space-y-4">
+              <form onSubmit={(e) => handleFeedbackSubmit(e)} className="space-y-3 sm:space-y-4">
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
@@ -352,7 +345,7 @@ export const LandingPage = () => {
                 Feedback-ul vostru ne ajută să îmbunătățim platforma pentru toți medicii din România
               </p>
             </div>
-            <form onSubmit={(e) => { setFeedbackOrigin('footer'); handleFeedbackSubmit(e); }} className="space-y-3 sm:space-y-4">
+            <form onSubmit={(e) => handleFeedbackSubmit(e)} className="space-y-3 sm:space-y-4">
               <textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
@@ -380,7 +373,7 @@ export const LandingPage = () => {
             Accesează instant legislația medicală de care ai nevoie. Fără înregistrare, fără costuri ascunse.
           </p>
           <button
-            onClick={() => { trackCTAClick('cta_section'); handleEnterApp(); }}
+            onClick={handleEnterApp}
             className="px-8 py-3 sm:px-10 sm:py-4 lg:py-5 bg-white text-primary text-base sm:text-lg font-bold rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-all shadow-2xl transform hover:scale-105"
           >
             Deschide legislația &rarr;

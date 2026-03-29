@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
-import { trackFeedbackSubmitted } from '@/lib/posthog';
 
 export const FeedbackButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -55,12 +54,9 @@ export const FeedbackButton = () => {
     if (selectedRating) {
       try {
         await api.submitFeedback({
-          origin: 'application',
-          rating: selectedRating,
-          feedback_text: reviewText.trim() || undefined,
+          stars: selectedRating,
+          message: reviewText.trim() || null,
         });
-
-        trackFeedbackSubmitted('application', selectedRating, !!reviewText.trim());
 
         setShowThanks(true);
         setTimeout(() => {

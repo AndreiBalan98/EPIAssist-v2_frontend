@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { trackTOCItemClicked } from '@/lib/posthog';
 
 interface HeadingItem {
   id: string;
@@ -29,10 +28,7 @@ export const FloatingTOC = ({
   const panelRef = useRef<HTMLDivElement>(null);
 
   const handleHeadingClick = (id: string) => {
-    const heading = headings.find(h => h.id === id);
-    if (heading) {
-      trackTOCItemClicked(heading.text);
-    }
+
 
     setActiveHeading(id);
     onHeadingClick(id);

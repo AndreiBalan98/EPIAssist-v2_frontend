@@ -4,8 +4,7 @@ import React, { useEffect, useRef } from 'react';
 
 interface DocumentViewerProps {
   content: string;
-  filename: string;
-  onHeadingsExtracted: (headings: Array<{ id: string; text: string; level: number }>) => void;
+  name: string;
   scrollToHeading?: string | null;
 }
 
@@ -16,14 +15,6 @@ interface ParsedElement {
   items?: string[];
   id?: string;
 }
-
-const generateId = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .substring(0, 50);
-};
 
 const parseInline = (text: string): React.JSX.Element[] => {
   const parts: React.JSX.Element[] = [];
@@ -69,9 +60,10 @@ const parseInline = (text: string): React.JSX.Element[] => {
 };
 
 const parseMarkdown = (content: string): ParsedElement[] => {
-  const lines = content.split('\n');
+  const lines = content.split(/\r?\n/);
   const elements: ParsedElement[] = [];
   let i = 0;
+  let headingIndex = 0;
 
   while (i < lines.length) {
     const line = lines[i];
@@ -93,7 +85,8 @@ const parseMarkdown = (content: string): ParsedElement[] => {
     if (headingMatch) {
       const level = headingMatch[1].length;
       const text = headingMatch[2].trim();
-      const id = generateId(text);
+      const id = `heading-${headingIndex}`;
+      headingIndex++;
       elements.push({ type: 'heading', level, content: text, id });
       i++;
       continue;
@@ -136,27 +129,9 @@ const parseMarkdown = (content: string): ParsedElement[] => {
 
 export const DocumentViewer = ({
   content,
-  onHeadingsExtracted,
   scrollToHeading,
 }: DocumentViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const headings: Array<{ id: string; text: string; level: number }> = [];
-    const lines = content.split('\n');
-
-    lines.forEach((line) => {
-      const match = line.match(/^(#{1,6})\s+(.+)$/);
-      if (match) {
-        const level = match[1].length;
-        const text = match[2].trim();
-        const id = generateId(text);
-        headings.push({ id, text, level });
-      }
-    });
-
-    onHeadingsExtracted(headings);
-  }, [content, onHeadingsExtracted]);
 
   useEffect(() => {
     if (!scrollToHeading || !containerRef.current) return;

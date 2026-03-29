@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { trackDocumentSelected } from '@/lib/posthog';
 
 interface DocumentSelectorProps {
   documents: string[];
@@ -42,7 +41,6 @@ export const DocumentSelector = ({
   };
 
   const handleDocumentSelect = (filename: string) => {
-    trackDocumentSelected(filename);
     onSelect(filename);
 
     if (isMobileMode) {
@@ -73,7 +71,7 @@ export const DocumentSelector = ({
                   : 'text-gray-700 hover:bg-bg-warm-light active:bg-bg-warm-light'
               }`}
             >
-              {doc.replace('.md', '')}
+              {doc}
             </button>
           ))}
         </div>
@@ -108,7 +106,7 @@ export const DocumentSelector = ({
                       : 'text-gray-700 hover:bg-bg-warm-light'
                   }`}
                 >
-                  {doc.replace('.md', '')}
+                  {doc}
                 </button>
               ))}
             </div>
