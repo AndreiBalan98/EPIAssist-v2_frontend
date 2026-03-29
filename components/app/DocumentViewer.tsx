@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface DocumentViewerProps {
   content: string;
@@ -25,8 +25,8 @@ const generateId = (text: string): string => {
     .substring(0, 50);
 };
 
-const parseInline = (text: string): JSX.Element[] => {
-  const parts: JSX.Element[] = [];
+const parseInline = (text: string): React.JSX.Element[] => {
+  const parts: React.JSX.Element[] = [];
   let currentIndex = 0;
   let keyCounter = 0;
 
