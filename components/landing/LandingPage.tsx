@@ -50,7 +50,7 @@ export const LandingPage = () => {
       }, 3000);
     }
   };
-
+    
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
