@@ -8,11 +8,16 @@ interface DocumentViewerProps {
   scrollToHeading?: string | null;
 }
 
+interface ListItem {
+  content: string;
+  children: ListItem[];
+}
+
 interface ParsedElement {
-  type: 'heading' | 'paragraph' | 'list' | 'hr' | 'empty';
+  type: 'heading' | 'paragraph' | 'list' | 'hr' | 'empty' | 'facsimil';
   level?: number;
   content?: string;
-  items?: string[];
+  items?: ListItem[];
   id?: string;
 }
 
@@ -30,23 +35,11 @@ const parseInline = (text: string): React.JSX.Element[] => {
     }
 
     if (match[2]) {
-      parts.push(
-        <strong key={keyCounter++} className="font-bold italic">
-          {match[2]}
-        </strong>
-      );
+      parts.push(<strong key={keyCounter++} className="font-bold italic">{match[2]}</strong>);
     } else if (match[3]) {
-      parts.push(
-        <strong key={keyCounter++} className="font-bold">
-          {match[3]}
-        </strong>
-      );
+      parts.push(<strong key={keyCounter++} className="font-bold">{match[3]}</strong>);
     } else if (match[4] || match[5]) {
-      parts.push(
-        <em key={keyCounter++} className="italic">
-          {match[4] || match[5]}
-        </em>
-      );
+      parts.push(<em key={keyCounter++} className="italic">{match[4] || match[5]}</em>);
     }
 
     currentIndex = match.index + match[0].length;
@@ -58,6 +51,70 @@ const parseInline = (text: string): React.JSX.Element[] => {
 
   return parts.length > 0 ? parts : [<span key={0}>{text}</span>];
 };
+
+function getIndent(line: string): number {
+  let count = 0;
+  for (const ch of line) {
+    if (ch === ' ') count++;
+    else if (ch === '\t') count += 4;
+    else break;
+  }
+  return count;
+}
+
+const LIST_RE = /^\s*-\s+(.+)$/;
+
+// Skips blank/whitespace-only lines starting at index, returns next non-blank index.
+function skipBlanks(lines: string[], i: number): number {
+  while (i < lines.length && !lines[i].trim()) i++;
+  return i;
+}
+
+function parseListAtDepth(
+  lines: string[],
+  startIndex: number,
+  depth: number
+): { items: ListItem[]; endIndex: number } {
+  const items: ListItem[] = [];
+  let i = startIndex;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Skip blank lines, but only if the next non-blank line continues this list level.
+    if (!line.trim()) {
+      const j = skipBlanks(lines, i);
+      if (j < lines.length && LIST_RE.test(lines[j]) && getIndent(lines[j]) >= depth) {
+        i = j;
+        continue;
+      }
+      break;
+    }
+
+    if (!LIST_RE.test(line)) break;
+
+    const indent = getIndent(line);
+    if (indent < depth) break;
+    if (indent > depth) break;
+
+    const content = line.match(LIST_RE)![1].trim();
+    i++;
+
+    // Look past blank lines for deeper children.
+    const j = skipBlanks(lines, i);
+    let children: ListItem[] = [];
+    if (j < lines.length && LIST_RE.test(lines[j]) && getIndent(lines[j]) > depth) {
+      i = j;
+      const result = parseListAtDepth(lines, i, getIndent(lines[i]));
+      children = result.items;
+      i = result.endIndex;
+    }
+
+    items.push({ content, children });
+  }
+
+  return { items, endIndex: i };
+}
 
 const parseMarkdown = (content: string): ParsedElement[] => {
   const lines = content.split(/\r?\n/);
@@ -72,6 +129,18 @@ const parseMarkdown = (content: string): ParsedElement[] => {
     if (!trimmedLine) {
       elements.push({ type: 'empty' });
       i++;
+      continue;
+    }
+
+    if (trimmedLine === ':::facsimil') {
+      i++;
+      const facsimilLines: string[] = [];
+      while (i < lines.length && lines[i].trim() !== ':::') {
+        facsimilLines.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length) i++; // skip closing :::
+      elements.push({ type: 'facsimil', content: facsimilLines.join('\n') });
       continue;
     }
 
@@ -92,40 +161,34 @@ const parseMarkdown = (content: string): ParsedElement[] => {
       continue;
     }
 
-    const listMatch = trimmedLine.match(/^(\s*)([-•]|[a-z]\)|[0-9]+\)|[a-z]\.|[0-9]+\.)\s+(.+)$/i);
-    if (listMatch) {
-      const items: string[] = [];
-
-      while (i < lines.length) {
-        const currentLine = lines[i].trim();
-        const currentMatch = currentLine.match(/^([-•]|[a-z]\)|[0-9]+\)|[a-z]\.|[0-9]+\.)\s+(.+)$/i);
-
-        if (!currentMatch) break;
-
-        items.push(currentMatch[2]);
-        i++;
-      }
-
-      elements.push({ type: 'list', items });
+    if (LIST_RE.test(line)) {
+      const result = parseListAtDepth(lines, i, getIndent(line));
+      elements.push({ type: 'list', items: result.items });
+      i = result.endIndex;
       continue;
     }
 
-    let paragraphText = trimmedLine;
+    // Each line is its own paragraph — preserves signature blocks, short labels, etc.
+    elements.push({ type: 'paragraph', content: trimmedLine });
     i++;
-
-    while (i < lines.length && lines[i].trim() &&
-           !lines[i].trim().match(/^#{1,6}\s/) &&
-           !lines[i].trim().match(/^([-•]|[a-z]\)|[0-9]+\)|[a-z]\.|[0-9]+\.)\s+/i) &&
-           !lines[i].trim().match(/^-{3,}$/)) {
-      paragraphText += ' ' + lines[i].trim();
-      i++;
-    }
-
-    elements.push({ type: 'paragraph', content: paragraphText });
   }
 
   return elements;
 };
+
+const renderListItems = (items: ListItem[], depth: number = 0): React.JSX.Element => (
+  <ul
+    className={depth === 0 ? 'mb-4 space-y-2' : 'mt-2 ml-6 space-y-1'}
+    style={{ listStyle: 'none', padding: 0 }}
+  >
+    {items.map((item, idx) => (
+      <li key={idx} className="text-dark-light leading-relaxed text-base break-words">
+        {parseInline(item.content)}
+        {item.children.length > 0 && renderListItems(item.children, depth + 1)}
+      </li>
+    ))}
+  </ul>
+);
 
 export const DocumentViewer = ({
   content,
@@ -200,20 +263,16 @@ export const DocumentViewer = ({
 
                 case 'paragraph':
                   return (
-                    <p key={index} className="text-dark-light leading-relaxed mb-4 text-base break-words overflow-wrap-anywhere">
+                    <p key={index} className="text-dark-light leading-relaxed mb-2 text-base break-words overflow-wrap-anywhere">
                       {parseInline(element.content || '')}
                     </p>
                   );
 
                 case 'list':
                   return (
-                    <ul key={index} className="mb-4 ml-8 space-y-2.5 overflow-x-hidden">
-                      {element.items?.map((item, itemIndex) => (
-                        <li key={itemIndex} className="text-dark-light leading-relaxed text-base marker:text-primary break-words">
-                          {parseInline(item)}
-                        </li>
-                      ))}
-                    </ul>
+                    <div key={index} className="overflow-x-hidden">
+                      {renderListItems(element.items || [])}
+                    </div>
                   );
 
                 case 'hr':
@@ -223,6 +282,15 @@ export const DocumentViewer = ({
 
                 case 'empty':
                   return <div key={index} className="h-2" />;
+
+                case 'facsimil':
+                  return (
+                    <div key={index} className="my-4 overflow-x-auto rounded-md border border-[#E5E1DD] bg-[#F8F6F4]">
+                      <pre className="text-xs font-mono p-4 text-dark-light leading-snug whitespace-pre">
+                        {element.content}
+                      </pre>
+                    </div>
+                  );
 
                 default:
                   return null;
