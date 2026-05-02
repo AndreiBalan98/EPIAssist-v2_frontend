@@ -52,6 +52,14 @@ const parseInline = (text: string): React.JSX.Element[] => {
   return parts.length > 0 ? parts : [<span key={0}>{text}</span>];
 };
 
+function dedent(text: string): string {
+  const lines = text.split('\n');
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  if (nonEmpty.length === 0) return text;
+  const minIndent = Math.min(...nonEmpty.map(l => l.match(/^(\s*)/)![1].length));
+  return lines.map(l => l.slice(minIndent)).join('\n').replace(/^\n+|\n+$/g, '');
+}
+
 function getIndent(line: string): number {
   let count = 0;
   for (const ch of line) {
@@ -287,7 +295,7 @@ export const DocumentViewer = ({
                   return (
                     <div key={index} className="my-4 overflow-x-auto rounded-md border border-[#E5E1DD] bg-[#F8F6F4]">
                       <pre className="text-xs font-mono p-4 text-dark-light leading-snug whitespace-pre">
-                        {element.content}
+                        {dedent(element.content || '')}
                       </pre>
                     </div>
                   );
