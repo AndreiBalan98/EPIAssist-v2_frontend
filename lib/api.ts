@@ -90,6 +90,17 @@ class ApiService {
   async submitFeedback(feedbackData: FeedbackRequest): Promise<void> {
     await this.client.post('/feedback', feedbackData);
   }
+
+  async uploadDocument(name: string, file: File): Promise<{ name: string }> {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('file', file);
+    const { data } = await this.client.post<{ name: string }>('/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    });
+    return data;
+  }
 }
 
 export const api = new ApiService();
