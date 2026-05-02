@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
 type Stage = 'idle' | 'uploading' | 'done' | 'error';
+type DeleteStage = 'idle' | 'deleting' | 'done' | 'error';
 
 const STEPS = [
   { label: 'Uploading document', key: 'upload' },
@@ -19,6 +20,28 @@ export default function UploadPage() {
   const [result, setResult] = useState<{ name: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [documents, setDocuments] = useState<string[]>([]);
+  const [docsLoading, setDocsLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleteStage, setDeleteStage] = useState<DeleteStage>('idle');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const loadDocuments = useCallback(async () => {
+    setDocsLoading(true);
+    try {
+      const docs = await api.listDocuments();
+      setDocuments(docs);
+    } catch {
+      // silently fail
+    } finally {
+      setDocsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0] ?? null;
@@ -50,6 +73,7 @@ export default function UploadPage() {
       await new Promise(r => setTimeout(r, 400));
       setResult(data);
       setStage('done');
+      await loadDocuments();
     } catch (err: unknown) {
       clearInterval(stepInterval);
       const message = err instanceof Error ? err.message : 'Upload failed';
@@ -68,8 +92,43 @@ export default function UploadPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
+  function toggleSelect(doc: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(doc)) next.delete(doc);
+      else next.add(doc);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selected.size === documents.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(documents));
+    }
+  }
+
+  async function handleDelete() {
+    if (selected.size === 0) return;
+    setDeleteStage('deleting');
+    setDeleteError(null);
+    try {
+      await Promise.all([...selected].map(doc => api.deleteDocument(doc)));
+      setSelected(new Set());
+      await loadDocuments();
+      setDeleteStage('done');
+      setTimeout(() => setDeleteStage('idle'), 2000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Delete failed';
+      setDeleteError(message);
+      setDeleteStage('error');
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-bg-warm flex items-center justify-center p-6">
+    <div className="min-h-screen bg-bg-warm flex flex-col items-center justify-center p-6 gap-6">
+      {/* Upload card */}
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-orange-100 p-8">
         <h1 className="text-2xl font-semibold text-dark mb-1">Upload Document</h1>
         <p className="text-sm text-gray-400 mb-8">Dev only — not linked anywhere</p>
@@ -184,6 +243,88 @@ export default function UploadPage() {
               Upload another
             </button>
           </div>
+        )}
+      </div>
+
+      {/* Delete card */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-orange-100 p-8">
+        <h2 className="text-lg font-semibold text-dark mb-1">Delete Documents</h2>
+        <p className="text-sm text-gray-400 mb-6">Select documents to permanently remove</p>
+
+        {deleteStage === 'deleting' ? (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="w-12 h-12 rounded-full border-4 border-orange-100 border-t-primary animate-spin" />
+            <p className="text-sm text-gray-500">
+              Deleting {selected.size} document{selected.size !== 1 ? 's' : ''}…
+            </p>
+          </div>
+        ) : deleteStage === 'done' ? (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-xl text-green-600">
+              ✓
+            </div>
+            <p className="text-sm text-green-700">Deleted successfully</p>
+          </div>
+        ) : (
+          <>
+            {docsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-8 h-8 rounded-full border-4 border-orange-100 border-t-primary animate-spin" />
+              </div>
+            ) : documents.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-6">No documents found</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-1">
+                  <button
+                    onClick={toggleAll}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {selected.size === documents.length ? 'Deselect all' : 'Select all'}
+                  </button>
+                  <span className="text-xs text-gray-400">
+                    {selected.size} selected
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {documents.map(doc => (
+                    <button
+                      key={doc}
+                      onClick={() => toggleSelect(doc)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-left transition-colors ${
+                        selected.has(doc)
+                          ? 'bg-red-50 border border-red-200 text-red-700'
+                          : 'hover:bg-bg-warm-light text-dark border border-transparent'
+                      }`}
+                    >
+                      <span className={`w-4 h-4 rounded flex-shrink-0 border flex items-center justify-center text-xs transition-colors ${
+                        selected.has(doc)
+                          ? 'bg-red-500 border-red-500 text-white'
+                          : 'border-gray-300'
+                      }`}>
+                        {selected.has(doc) && '✓'}
+                      </span>
+                      {doc}
+                    </button>
+                  ))}
+                </div>
+
+                {deleteStage === 'error' && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                    {deleteError}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleDelete}
+                  disabled={selected.size === 0}
+                  className="w-full py-3 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Delete {selected.size > 0 ? `${selected.size} document${selected.size !== 1 ? 's' : ''}` : ''}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

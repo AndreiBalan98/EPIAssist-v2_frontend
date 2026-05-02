@@ -101,6 +101,10 @@ class ApiService {
     });
     return data;
   }
+
+  async deleteDocument(name: string): Promise<void> {
+    await this.client.delete(`/documents/${encodeURIComponent(name)}`);
+  }
 }
 
 export const api = new ApiService();
