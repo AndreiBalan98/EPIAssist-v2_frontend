@@ -43,7 +43,7 @@ export const LandingPage = () => {
     }
   };
 
-    
+
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -181,106 +181,69 @@ export const LandingPage = () => {
       </section>
 
       {/* Why EPIAssist Section */}
-      <section id="why" className="min-h-screen py-12 sm:py-16 lg:py-0 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-bg-warm-light flex items-center">
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-              De ce <span className="text-primary">EPI</span><span className="text-gray-500 italic">Assist</span>?
-            </h2>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 border-2 border-gray-200">
-              <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <span className="text-xl sm:text-2xl">&#10060;</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Înainte</h3>
-              </div>
-              <ul className="space-y-3 sm:space-y-4 text-gray-700">
-                {[
-                  'Documentele erau în PDF pe calculator și telefon',
-                  'Rătăcite și greu de găsit când aveai nevoie urgentă',
-                  'Neuniform formatate și dificil de citit',
-                  'Navigare complicată prin documente lungi',
-                  'Timp pierdut la interpretarea textelor legale',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start text-sm sm:text-base lg:text-lg">
-                    <span className="text-red-500 mr-2 sm:mr-3 mt-1 text-lg sm:text-xl flex-shrink-0">&bull;</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-gradient-to-br from-primary to-primary-dark rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 border-2 border-primary">
-              <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-xl sm:text-2xl">&#10003;</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white">Acum cu EPIAssist</h3>
-              </div>
-              <ul className="space-y-3 sm:space-y-4 text-white">
-                {[
-                  { bold: 'Aceleași documente oficiale', rest: ' - surse verificate' },
-                  { bold: 'La un loc', rest: ' - toate într-o singură platformă' },
-                  { bold: 'Curat', rest: ' - formatare uniformă și profesională' },
-                  { bold: 'Ușor de navigat', rest: ' - cuprins interactiv generat automat' },
-                  { bold: 'Asistență AI', rest: ' - răspunsuri instant bazate pe legislație' },
-                  { bold: 'Acces de oriunde', rest: ' - web, telefon, tabletă, desktop' },
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start text-sm sm:text-base lg:text-lg">
-                    <span className="mr-2 sm:mr-3 mt-1 text-lg sm:text-xl flex-shrink-0">&#10003;</span>
-                    <span><strong>{item.bold}</strong>{item.rest}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <section id="why" className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-bg-warm-light">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-10">
+            De ce <span className="text-primary">EPI</span><span className="text-gray-500 italic">Assist</span>?
+          </h2>
+          <div className="space-y-6 text-gray-700">
+            <p className="text-base sm:text-lg leading-relaxed">
+              Medicii din România se confruntă zilnic cu necesitatea de a consulta rapid legislația medicală relevantă — ordine ministeriale, norme tehnice și reglementări care guvernează practica clinică și administrativă. Documentele oficiale sunt publicate pe site-uri guvernamentale în format PDF, dificil de navigat, neformatate pentru citire rapidă și practic inaccesibile pe dispozitive mobile în condiții de urgență.
+            </p>
+            <p className="text-base sm:text-lg leading-relaxed">
+              EPIAssist reunește această legislație într-o platformă structurată și accesibilă. Documentele sunt formatate uniform, prevăzute cu cuprins interactiv și disponibile pe orice dispozitiv. Un asistent AI integrat permite interpretarea rapidă a prevederilor legale, eliminând necesitatea citirii exhaustive a unui document pentru a găsi o informație specifică.
+            </p>
+            <p className="text-base sm:text-lg leading-relaxed">
+              Scopul platformei este de a reduce timpul petrecut de medici în căutarea și interpretarea documentelor legale, astfel încât aceștia să se poată concentra pe ceea ce contează cu adevărat: îngrijirea pacienților.
+            </p>
           </div>
         </div>
       </section>
 
       {/* Documents Section */}
       <section id="documents" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-10 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Documente Disponibile</h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">Acces instant la ordine și legi esențiale pentru practica medicală</p>
+            <p className="text-base sm:text-lg text-gray-600">Legislație medicală esențială, structurată și accesibilă</p>
           </div>
 
-          <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-10 lg:mb-12">
-            <div className="rounded-lg sm:rounded-xl overflow-hidden shadow-lg border-2 border-primary/20">
-              <img src="/screenshots/desktop-screenshot.png" alt="Interfață EPIAssist pe Desktop" className="w-full h-auto object-cover" />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-              <div className="rounded-lg sm:rounded-xl overflow-hidden shadow-lg border-2 border-primary/20">
-                <img src="/screenshots/mobile-screenshot-1.png" alt="EPIAssist pe telefon - Vizualizare document" className="w-full h-auto object-cover" />
+          <div className="space-y-4 mb-10 sm:mb-12">
+            {[
+              {
+                code: 'ORDIN Nr. 428/2020',
+                desc: 'Metodologia de supraveghere a sindromului de infecție respiratorie acută, a sindromului respirator acut sever și a infecției cu coronavirus.',
+              },
+              {
+                code: 'ORDIN Nr. 914/2006',
+                desc: 'Norme privind condițiile pe care trebuie să le îndeplinească un spital în vederea obținerii autorizației sanitare de funcționare.',
+              },
+              {
+                code: 'ORDIN Nr. 1101/2016',
+                desc: 'Norme de supraveghere, prevenire și limitare a infecțiilor asociate asistenței medicale în unitățile sanitare.',
+              },
+              {
+                code: 'ORDIN Nr. 1761/2021',
+                desc: 'Norme tehnice privind curățenia, dezinfecția și sterilizarea în unitățile sanitare publice și private, tehnica efectuării procedurilor de curățenie și dezinfecție.',
+              },
+            ].map((doc) => (
+              <div key={doc.code} className="border border-gray-200 rounded-lg p-5 sm:p-6 hover:border-primary/40 transition-colors">
+                <h3 className="font-bold text-gray-900 mb-2 text-base sm:text-lg">{doc.code}</h3>
+                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{doc.desc}</p>
               </div>
-              <div className="rounded-lg sm:rounded-xl overflow-hidden shadow-lg border-2 border-primary/20">
-                <img src="/screenshots/mobile-screenshot-2.png" alt="EPIAssist pe telefon - Asistent AI" className="w-full h-auto object-cover" />
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="bg-gradient-to-br from-bg-warm-light to-white rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-primary/20 shadow-xl">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Ordine și Legi Incluse</h3>
-            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto">
-              {[
-                { num: '1', name: 'ORDIN Nr. 1101/2016' },
-                { num: '2', name: 'ORDIN Nr. 1761/2021' },
-                { num: '3', name: 'ORDIN Nr. 428/2020' },
-                { num: '4', name: 'ORDIN Nr. 914/2006' },
-              ].map((doc) => (
-                <div key={doc.num} className="flex items-center space-x-2 sm:space-x-3 bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-primary/20">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold text-sm sm:text-base">{doc.num}</span>
-                  </div>
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">{doc.name}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-sm sm:text-base text-gray-600 mt-4 sm:mt-6 px-4">
-              + multe alte documente legislative esențiale pentru medicina din România
+          <div className="bg-bg-warm-light rounded-lg p-5 sm:p-6 border border-primary/20">
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-3">
+              Baza noastră de date legislative este în continuă extindere. Adăugăm periodic noi documente relevante pentru practica medicală din România.
+            </p>
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+              Dacă considerați că un document important lipsește, vă rugăm să ne transmiteți un{' '}
+              <button onClick={() => scrollToSection('feedback')} className="text-primary underline font-medium hover:text-primary-dark transition-colors">
+                feedback
+              </button>
+              {' '}și îl vom adăuga.
             </p>
           </div>
         </div>
@@ -291,7 +254,6 @@ export const LandingPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10 sm:mb-12 lg:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Despre Noi</h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">Doi tineri profesioniști români care au văzut o problemă și au creat soluția</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
@@ -315,8 +277,8 @@ export const LandingPage = () => {
                   </svg>
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Dr. Lucian Boghian</h3>
-                <p className="text-primary font-medium text-xs sm:text-sm mb-1 sm:mb-2">Medic Rezident</p>
-                <p className="text-[10px] sm:text-xs text-gray-600">Rezident Epidemiologie<br/>Doctorand în Științe Medicale</p>
+                <p className="text-primary font-medium text-xs sm:text-sm mb-1 sm:mb-2">Medic Rezident Epidemiologie</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Doctorand</p>
               </div>
               <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg border-2 border-[#6A5E3E]/20 text-center">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-[#6A5E3E] to-[#5E2916] rounded-full flex items-center justify-center">
@@ -324,7 +286,7 @@ export const LandingPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Andrei Bălan</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Andrei Balan</h3>
                 <p className="text-[#6A5E3E] font-medium text-xs sm:text-sm mb-1 sm:mb-2">Software Engineer</p>
                 <p className="text-[10px] sm:text-xs text-gray-600">Absolvent FII UAIC<br/>Specialist Web & AI</p>
               </div>
@@ -342,7 +304,7 @@ export const LandingPage = () => {
                 Spuneți-ne părerea dumneavoastră
               </h2>
               <p className="text-base sm:text-lg text-gray-600 px-4">
-                Feedback-ul vostru ne ajută să îmbunătățim platforma pentru toți medicii din România
+                Feedback-ul vostru ne ajută să îmbunătățim platforma
               </p>
             </div>
             <form onSubmit={(e) => handleFeedbackSubmit(e)} className="space-y-3 sm:space-y-4">
@@ -370,7 +332,7 @@ export const LandingPage = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">Gata să Începi?</h2>
           <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-            Accesează instant legislația medicală de care ai nevoie. Fără înregistrare, fără costuri ascunse.
+            Accesează instant legislația medicală de care ai nevoie.
           </p>
           <button
             onClick={handleEnterApp}
@@ -384,17 +346,22 @@ export const LandingPage = () => {
       {/* Footer */}
       <footer id="footer" className="bg-[#5E2916] text-gray-300 py-8 sm:py-10 lg:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg"></div>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
                 <span className="text-lg sm:text-xl font-bold text-white">EPI<span className="font-light italic">Assist</span></span>
               </div>
               <p className="text-xs sm:text-sm">Legislația medicală la îndemână pentru toți medicii din România.</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Contact</h4>
-              <p className="text-xs sm:text-sm mb-1">Email: contact@epiassist.ro</p>
+              <p className="text-xs sm:text-sm mb-1">andrei.balan@gmail.com</p>
+              <p className="text-xs sm:text-sm mb-1">lucian.boghian@gmail.com</p>
               <p className="text-xs sm:text-sm">Iași, România</p>
             </div>
             <div className="sm:col-span-2 md:col-span-1">
@@ -402,9 +369,6 @@ export const LandingPage = () => {
               <p className="text-xs sm:text-sm mb-1">&copy; 2024 EPI Assist</p>
               <p className="text-xs sm:text-sm">Toate drepturile rezervate</p>
             </div>
-          </div>
-          <div className="border-t border-primary/30 pt-6 sm:pt-8 text-center text-xs sm:text-sm">
-            <p>Creat cu dragoste pentru medicii din România de Dr. Lucian Boghian și Andrei Bălan</p>
           </div>
         </div>
       </footer>

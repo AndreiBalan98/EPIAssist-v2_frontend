@@ -9,6 +9,7 @@ import { DocumentViewer } from '@/components/app/DocumentViewer';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { ChatInput } from '@/components/app/ChatInput';
 import { FeedbackButton } from '@/components/app/FeedbackButton';
+import { SplashScreen } from '@/components/ui/SplashScreen';
 import { useDocuments } from '@/hooks/useDocuments';
 
 export const ApplicationShell = () => {
@@ -18,8 +19,8 @@ export const ApplicationShell = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
 
-  const tocHeadings = toc.map(item => ({
-    id: `heading-${item.position}`,
+  const tocHeadings = toc.map((item, index) => ({
+    id: `heading-${index}`,
     text: item.name,
     level: item.level,
   }));
@@ -64,6 +65,8 @@ export const ApplicationShell = () => {
   }
 
   return (
+    <>
+    <SplashScreen />
     <div className="flex h-screen overflow-hidden overflow-x-hidden bg-white lg:bg-gradient-to-br lg:from-bg-warm lg:to-bg-warm-light">
       <Header
         onMenuClick={() => setIsMenuOpen(true)}
@@ -131,5 +134,6 @@ export const ApplicationShell = () => {
 
       <FeedbackButton />
     </div>
+    </>
   );
 };
