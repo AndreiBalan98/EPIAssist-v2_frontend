@@ -10,7 +10,7 @@ interface UseDocumentsReturn {
   toc: TocItem[];
   loading: boolean;
   error: string | null;
-  selectDocument: (name: string) => Promise<void>;
+  selectDocument: (name: string) => Promise<TocItem[] | null>;
 }
 
 export const useDocuments = (): UseDocumentsReturn => {
@@ -41,7 +41,7 @@ export const useDocuments = (): UseDocumentsReturn => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectDocument = async (name: string) => {
+  const selectDocument = async (name: string): Promise<TocItem[] | null> => {
     setLoading(true);
     setError(null);
     setToc([]);
@@ -53,9 +53,11 @@ export const useDocuments = (): UseDocumentsReturn => {
       ]);
       setCurrentDocument({ name, content: doc.content });
       setToc(tocData);
+      return tocData;
     } catch (err) {
       setError(`Failed to load document: ${name}`);
       console.error('Error loading document:', err);
+      return null;
     } finally {
       setLoading(false);
     }

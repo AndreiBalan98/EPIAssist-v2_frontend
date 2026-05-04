@@ -5,11 +5,43 @@ import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import axios from 'axios';
+import { Citation, decodeCitationHref, rewriteSourcesAsLinks } from '@/lib/citations';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+interface ChatInputProps {
+  onCitationClick: (citation: Citation) => void;
+}
+
+const passthroughUrlTransform = (url: string) => url;
+
+interface CitationLinkProps {
+  href?: string;
+  children?: React.ReactNode;
+  onCitationClick: (citation: Citation) => void;
+}
+
+const CitationLink = ({ href, children, onCitationClick }: CitationLinkProps) => {
+  const citation = href ? decodeCitationHref(href) : null;
+  if (!citation) {
+    return <a href={href}>{children}</a>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        onCitationClick(citation);
+      }}
+      className="inline text-left text-secondary hover:text-[#B56A5C] underline decoration-dotted underline-offset-2 cursor-pointer break-words"
+    >
+      {children}
+    </button>
+  );
+};
 
 interface StarRatingProps {
   onRate: (rating: number, reviewText?: string) => void;
@@ -130,7 +162,7 @@ const StarRating = ({ onRate, currentRating, userPrompt }: StarRatingProps) => {
   );
 };
 
-export const ChatInput = () => {
+export const ChatInput = ({ onCitationClick }: ChatInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
@@ -313,7 +345,18 @@ Sunt aici să te ajut să navighezi prin documentele legislative medicale. Iată
           ) : lastAssistantMessage ? (
             <div>
               <div className="prose prose-sm max-w-none prose-headings:text-dark-light prose-strong:text-secondary prose-a:text-secondary">
-                <ReactMarkdown>{lastAssistantMessage.content}</ReactMarkdown>
+                <ReactMarkdown
+                  urlTransform={passthroughUrlTransform}
+                  components={{
+                    a: ({ href, children }) => (
+                      <CitationLink href={href} onCitationClick={onCitationClick}>
+                        {children}
+                      </CitationLink>
+                    ),
+                  }}
+                >
+                  {rewriteSourcesAsLinks(lastAssistantMessage.content)}
+                </ReactMarkdown>
               </div>
               <StarRating
                 onRate={handleRating}

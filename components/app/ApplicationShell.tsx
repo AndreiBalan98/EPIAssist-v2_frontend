@@ -11,6 +11,7 @@ import { ChatInput } from '@/components/app/ChatInput';
 import { FeedbackButton } from '@/components/app/FeedbackButton';
 import { SplashScreen } from '@/components/ui/SplashScreen';
 import { useDocuments } from '@/hooks/useDocuments';
+import { Citation, resolveHeadingId } from '@/lib/citations';
 
 export const ApplicationShell = () => {
   const { documents, currentDocument, toc, loading, error, selectDocument } = useDocuments();
@@ -34,6 +35,18 @@ export const ApplicationShell = () => {
     setScrollToHeading(null);
     await selectDocument(name);
   }, [selectDocument]);
+
+  const handleCitationClick = useCallback(async (citation: Citation) => {
+    if (!documents.includes(citation.document)) return;
+
+    const targetToc = citation.document !== currentDocument?.name
+      ? await selectDocument(citation.document)
+      : toc;
+
+    if (!targetToc) return;
+    const id = resolveHeadingId(targetToc, citation.segments);
+    if (id) handleHeadingClick(id);
+  }, [documents, currentDocument, toc, selectDocument, handleHeadingClick]);
 
   if (error && !currentDocument) {
     return (
@@ -130,7 +143,7 @@ export const ApplicationShell = () => {
         </div>
       )}
 
-      <ChatInput />
+      <ChatInput onCitationClick={handleCitationClick} />
 
       <FeedbackButton />
     </div>
