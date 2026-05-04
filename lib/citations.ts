@@ -26,11 +26,33 @@ export const parseCitation = (raw: string): Citation | null => {
   return { document, segments, raw };
 };
 
-const normalize = (s: string): string => s.replace(/\s+/g, ' ').trim().toLowerCase();
+const normalize = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+const segmentMatches = (tocName: string, segment: string): boolean => {
+  const t = normalize(tocName);
+  const s = normalize(segment);
+  if (!t || !s) return false;
+  if (t === s) return true;
+  // Tolerate LLM truncation/expansion: prefix match on either side.
+  return (
+    t.startsWith(s + ' ') ||
+    s.startsWith(t + ' ') ||
+    t.split(' ')[0] === s ||
+    s.split(' ')[0] === t
+  );
+};
 
 /**
  * Walks the TOC consuming one segment per matching heading. Returns the
- * heading-N id of the deepest matched section, or null if no match.
+ * heading-N id of the deepest matched section. Falls back to the deepest
+ * partial match if not all segments resolve.
  */
 export const resolveHeadingId = (toc: TocItem[], segments: string[]): string | null => {
   if (segments.length === 0) return null;
@@ -39,13 +61,13 @@ export const resolveHeadingId = (toc: TocItem[], segments: string[]): string | n
   let lastMatchPosition = -1;
 
   for (let i = 0; i < toc.length && segIdx < segments.length; i++) {
-    if (normalize(toc[i].name) === normalize(segments[segIdx])) {
+    if (segmentMatches(toc[i].name, segments[segIdx])) {
       lastMatchPosition = i;
       segIdx++;
     }
   }
 
-  if (segIdx !== segments.length) return null;
+  if (lastMatchPosition < 0) return null;
   return `heading-${lastMatchPosition}`;
 };
 
