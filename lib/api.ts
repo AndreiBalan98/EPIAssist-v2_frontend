@@ -22,6 +22,21 @@ export interface FeedbackRequest {
   message?: string | null;
 }
 
+export interface ChunkRef {
+  url: string;
+  similarity: number;
+}
+
+export interface Conversation {
+  id: number;
+  userPrompt: string;
+  enhancedPrompt: string | null;
+  candidateChunks: ChunkRef[] | null;
+  contextChunks: ChunkRef[] | null;
+  finalAnswer: string | null;
+  createdAt: string;
+}
+
 class ApiService {
   private client: AxiosInstance;
 
@@ -104,6 +119,11 @@ class ApiService {
 
   async deleteDocument(name: string): Promise<void> {
     await this.client.delete(`/documents/${encodeURIComponent(name)}`);
+  }
+
+  async listConversations(): Promise<Conversation[]> {
+    const { data } = await this.client.get<Conversation[]>('/conversations');
+    return data;
   }
 }
 
